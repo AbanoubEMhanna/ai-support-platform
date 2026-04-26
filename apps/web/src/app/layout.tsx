@@ -13,13 +13,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <body
+        className="flex min-h-full flex-col text-stone-950"
+        suppressHydrationWarning
+      >
         <AppHeader />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-        <footer className="border-t bg-white py-6">
-          <div className="mx-auto max-w-6xl px-4 text-xs text-zinc-500">
-            Portfolio project — Local Docker MVP
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-6 md:py-10">
+          {children}
+        </main>
+        <footer className="border-t border-stone-300/70 bg-[#fffaf0]/70 py-7 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 text-xs text-stone-500 md:flex-row md:items-center md:justify-between md:px-6">
+            <span>Portfolio project — Local Docker MVP</span>
+            <span>NestJS · Next.js · Postgres/pgvector · RabbitMQ</span>
           </div>
         </footer>
       </body>

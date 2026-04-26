@@ -31,28 +31,75 @@ export default function DashboardPage() {
   const openTickets = tickets.filter((t) => t.status === "OPEN").length;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Dashboard</h1>
-      {error ? <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <Card title="Total Documents" value={String(documents.length)} />
+    <div className="page-shell">
+      <section className="surface-dark">
+        <div className="eyebrow text-orange-300">Control room</div>
+        <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-black tracking-[-0.05em] text-white md:text-6xl">
+              Dashboard
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
+              Quick operational readout for documents, RAG readiness, and
+              support escalation.
+            </p>
+          </div>
+          <a
+            className="btn-primary bg-orange-600 hover:bg-orange-500"
+            href="/settings"
+          >
+            Set active org
+          </a>
+        </div>
+      </section>
+      {error ? <div className="error-box">{error}</div> : null}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <Card
+          title="Total Documents"
+          value={String(documents.length)}
+          tone="dark"
+        />
         <Card title="Ready Documents" value={String(readyDocs)} />
         <Card title="Open Tickets" value={String(openTickets)} />
         <Card title="Total Tickets" value={String(tickets.length)} />
       </div>
-      <div className="text-sm text-zinc-600">
-        Tip: create/switch an org from <a className="underline" href="/settings">Settings</a> first.
+      <div className="surface flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="font-black tracking-[-0.03em]">Start here</div>
+          <div className="text-sm text-stone-600">
+            Create or switch an organization before uploading documents or
+            chatting.
+          </div>
+        </div>
+        <a className="btn-secondary" href="/settings">
+          Open settings
+        </a>
       </div>
     </div>
   );
 }
 
-function Card({ title, value }: { title: string; value: string }) {
+function Card({
+  title,
+  value,
+  tone,
+}: {
+  title: string;
+  value: string;
+  tone?: "dark";
+}) {
   return (
-    <div className="rounded-lg border bg-white p-4">
-      <div className="text-xs text-zinc-500">{title}</div>
-      <div className="mt-1 text-2xl font-semibold">{value}</div>
+    <div className={tone === "dark" ? "surface-dark" : "surface"}>
+      <div
+        className={
+          tone === "dark"
+            ? "text-xs font-bold uppercase tracking-[0.2em] text-orange-300"
+            : "text-xs font-bold uppercase tracking-[0.2em] text-stone-500"
+        }
+      >
+        {title}
+      </div>
+      <div className="mt-4 text-5xl font-black tracking-[-0.06em]">{value}</div>
     </div>
   );
 }
-

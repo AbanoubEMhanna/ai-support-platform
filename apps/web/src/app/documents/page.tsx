@@ -40,7 +40,8 @@ export default function DocumentsPage() {
         credentials: "include",
       });
       const json = await res.json();
-      if (!res.ok || !json?.success) throw new Error(json?.error?.message ?? "Upload failed");
+      if (!res.ok || !json?.success)
+        throw new Error(json?.error?.message ?? "Upload failed");
       fileRef.current!.value = "";
       await load();
     } catch (err: any) {
@@ -51,42 +52,102 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Documents</h1>
-      {error ? <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+    <div className="page-shell">
+      <section>
+        <div className="eyebrow">Knowledge base</div>
+        <h1 className="page-title">Documents</h1>
+        <p className="page-subtitle">
+          Upload support knowledge, watch worker processing status, and make it
+          available for RAG retrieval.
+        </p>
+      </section>
+      {error ? <div className="error-box">{error}</div> : null}
 
-      <div className="rounded-lg border bg-white p-4 space-y-2">
-        <div className="font-medium">Upload</div>
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
-          <input ref={fileRef} type="file" className="text-sm" accept=".txt,.pdf" />
-          <button
-            className="rounded-md bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-60"
-            onClick={upload}
-            disabled={loading}
-          >
-            {loading ? "Uploading..." : "Upload"}
-          </button>
+      <section className="surface-dark">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="eyebrow text-orange-300">Ingestion</div>
+            <h2 className="mt-2 text-3xl font-black tracking-[-0.05em]">
+              Upload source material
+            </h2>
+            <p className="mt-2 text-sm text-stone-300">
+              TXT/PDF only · max 10MB · processed asynchronously by the worker.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 md:min-w-[420px] md:flex-row md:items-center">
+            <input
+              ref={fileRef}
+              type="file"
+              className="field bg-white text-stone-950"
+              accept=".txt,.pdf"
+            />
+            <button
+              className="btn-primary bg-orange-600 hover:bg-orange-500"
+              onClick={upload}
+              disabled={loading}
+            >
+              {loading ? "Uploading..." : "Upload"}
+            </button>
+          </div>
         </div>
-        <div className="text-xs text-zinc-500">Supported: TXT, PDF. Max 10MB.</div>
-      </div>
+      </section>
 
-      <div className="rounded-lg border bg-white p-4">
-        <div className="mb-3 font-medium">Your documents</div>
-        <div className="space-y-2">
+      <section className="surface">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="eyebrow">Library</div>
+            <h2 className="text-2xl font-black tracking-[-0.04em]">
+              Your documents
+            </h2>
+          </div>
+          <span className="pill">{items.length} files</span>
+        </div>
+        <div className="grid gap-3">
           {items.map((d) => (
-            <div key={d.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
+            <div
+              key={d.id}
+              className="flex items-center justify-between gap-4 rounded-3xl border border-stone-300 bg-white/70 p-4"
+            >
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{d.originalName}</div>
-                <div className="text-xs text-zinc-500">{d.mimeType} • {d.size} bytes</div>
-                {d.errorMessage ? <div className="text-xs text-red-700">{d.errorMessage}</div> : null}
+                <div className="truncate text-lg font-black tracking-[-0.03em]">
+                  {d.originalName}
+                </div>
+                <div className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-stone-500">
+                  {d.mimeType} · {d.size} bytes
+                </div>
+                {d.errorMessage ? (
+                  <div className="mt-2 text-xs text-red-700">
+                    {d.errorMessage}
+                  </div>
+                ) : null}
               </div>
-              <div className="text-xs font-medium">{d.status}</div>
+              <StatusBadge status={d.status} />
             </div>
           ))}
-          {items.length === 0 ? <div className="text-sm text-zinc-600">No documents yet.</div> : null}
+          {items.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-stone-300 p-8 text-sm text-stone-600">
+              No documents yet. Upload a TXT or PDF to start the async pipeline.
+            </div>
+          ) : null}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === "READY"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : status === "FAILED"
+        ? "border-red-200 bg-red-50 text-red-700"
+        : "border-orange-200 bg-orange-50 text-orange-700";
+
+  return (
+    <span
+      className={`rounded-full border px-3 py-1 text-xs font-black ${tone}`}
+    >
+      {status}
+    </span>
+  );
+}

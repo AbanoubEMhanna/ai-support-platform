@@ -7,13 +7,19 @@ import type { TicketItem } from "../../lib/types";
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
-type Conversation = { id: string; title?: string | null; createdAt: string; updatedAt: string };
+type Conversation = {
+  id: string;
+  title?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export default function TicketsPage() {
   const [items, setItems] = useState<TicketItem[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState("");
-  const [priority, setPriority] = useState<(typeof PRIORITIES)[number]>("MEDIUM");
+  const [priority, setPriority] =
+    useState<(typeof PRIORITIES)[number]>("MEDIUM");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -35,7 +41,10 @@ export default function TicketsPage() {
   async function updateStatus(id: string, status: string) {
     try {
       setError(null);
-      await apiFetch(`/tickets/${id}/status`, { method: "PATCH", body: { status } });
+      await apiFetch(`/tickets/${id}/status`, {
+        method: "PATCH",
+        body: { status },
+      });
       await load();
     } catch (err: any) {
       setError(err?.message ?? "Update failed");
@@ -70,17 +79,29 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Tickets</h1>
-      {error ? <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+    <div className="page-shell">
+      <section>
+        <div className="eyebrow">Escalation desk</div>
+        <h1 className="page-title">Tickets</h1>
+        <p className="page-subtitle">
+          Convert conversations into structured support work and track status
+          through resolution.
+        </p>
+      </section>
+      {error ? <div className="error-box">{error}</div> : null}
 
-      <form className="rounded-lg border bg-white p-4" onSubmit={createTicket}>
-        <div className="mb-3 font-medium">Create ticket</div>
+      <form className="surface-dark" onSubmit={createTicket}>
+        <div className="eyebrow text-orange-300">Manual escalation</div>
+        <h2 className="mt-2 text-3xl font-black tracking-[-0.05em]">
+          Create ticket
+        </h2>
         <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-          <label className="space-y-1 text-sm">
-            <span className="text-xs text-zinc-500">Conversation</span>
+          <label className="mt-5 space-y-2 text-sm">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
+              Conversation
+            </span>
             <select
-              className="w-full rounded-md border px-3 py-2 text-sm"
+              className="field"
               value={conversationId}
               onChange={(e) => setConversationId(e.target.value)}
             >
@@ -91,12 +112,16 @@ export default function TicketsPage() {
               ))}
             </select>
           </label>
-          <label className="space-y-1 text-sm">
-            <span className="text-xs text-zinc-500">Priority</span>
+          <label className="mt-5 space-y-2 text-sm">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
+              Priority
+            </span>
             <select
-              className="w-full rounded-md border px-3 py-2 text-sm"
+              className="field"
               value={priority}
-              onChange={(e) => setPriority(e.target.value as (typeof PRIORITIES)[number])}
+              onChange={(e) =>
+                setPriority(e.target.value as (typeof PRIORITIES)[number])
+              }
             >
               {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
@@ -106,18 +131,20 @@ export default function TicketsPage() {
             </select>
           </label>
         </div>
-        <label className="mt-3 block space-y-1 text-sm">
-          <span className="text-xs text-zinc-500">Note</span>
+        <label className="mt-4 block space-y-2 text-sm">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
+            Note
+          </span>
           <textarea
-            className="min-h-24 w-full resize-y rounded-md border px-3 py-2 text-sm"
+            className="field min-h-28 resize-y"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="What should a human support agent know?"
           />
         </label>
-        <div className="mt-3 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <button
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+            className="btn-primary bg-orange-600 hover:bg-orange-500"
             disabled={creating || conversations.length === 0}
           >
             {creating ? "Creating..." : "Create ticket"}
@@ -125,20 +152,40 @@ export default function TicketsPage() {
         </div>
       </form>
 
-      <div className="rounded-lg border bg-white p-4">
-        <div className="space-y-2">
+      <section className="surface">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="eyebrow">Queue</div>
+            <h2 className="text-2xl font-black tracking-[-0.04em]">
+              Active tickets
+            </h2>
+          </div>
+          <span className="pill">{items.length} tickets</span>
+        </div>
+        <div className="grid gap-3">
           {items.map((t) => (
-            <div key={t.id} className="rounded-md border p-3 space-y-2">
+            <div
+              key={t.id}
+              className="space-y-3 rounded-3xl border border-stone-300 bg-white/70 p-4"
+            >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium">{t.id.slice(0, 8)}</div>
-                <div className="text-xs">{t.priority}</div>
+                <div className="text-lg font-black tracking-[-0.03em]">
+                  #{t.id.slice(0, 8)}
+                </div>
+                <div className="pill">{t.priority}</div>
               </div>
-              <div className="text-xs text-zinc-500">Conversation: {t.conversationId}</div>
-              {t.note ? <div className="text-sm">{t.note}</div> : null}
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">
+                Conversation: {t.conversationId}
+              </div>
+              {t.note ? (
+                <div className="text-sm leading-6 text-stone-700">{t.note}</div>
+              ) : null}
               <div className="flex items-center gap-2">
-                <div className="text-xs text-zinc-500">Status:</div>
+                <div className="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">
+                  Status
+                </div>
                 <select
-                  className="rounded-md border px-2 py-1 text-sm"
+                  className="rounded-2xl border border-stone-300 bg-white px-3 py-2 text-sm font-bold"
                   value={t.status}
                   onChange={(e) => updateStatus(t.id, e.target.value)}
                 >
@@ -151,9 +198,13 @@ export default function TicketsPage() {
               </div>
             </div>
           ))}
-          {items.length === 0 ? <div className="text-sm text-zinc-600">No tickets yet.</div> : null}
+          {items.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-stone-300 p-8 text-sm text-stone-600">
+              No tickets yet. Create one from an existing conversation.
+            </div>
+          ) : null}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

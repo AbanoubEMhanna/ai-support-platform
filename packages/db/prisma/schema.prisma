@@ -11,6 +11,8 @@ enum MembershipRole {
   OWNER
   ADMIN
   MEMBER
+
+  @@map("membership_role")
 }
 
 enum DocumentStatus {
@@ -18,12 +20,16 @@ enum DocumentStatus {
   PROCESSING
   READY
   FAILED
+
+  @@map("document_status")
 }
 
 enum MessageRole {
   USER
   ASSISTANT
   SYSTEM
+
+  @@map("message_role")
 }
 
 enum TicketStatus {
@@ -31,6 +37,8 @@ enum TicketStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+
+  @@map("ticket_status")
 }
 
 enum TicketPriority {
@@ -38,6 +46,8 @@ enum TicketPriority {
   MEDIUM
   HIGH
   URGENT
+
+  @@map("ticket_priority")
 }
 
 model User {
