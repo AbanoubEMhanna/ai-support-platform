@@ -1,0 +1,12 @@
+{
+  "name": "@ai-support-platform/api",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "echo \"API not scaffolded yet\"",
+    "build": "echo \"API not scaffolded yet\"",
+    "lint": "echo \"API not scaffolded yet\"",
+    "test": "echo \"API not scaffolded yet\""
+  }
+}
+

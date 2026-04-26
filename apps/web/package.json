@@ -1,0 +1,12 @@
+{
+  "name": "@ai-support-platform/web",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "echo \"Web not scaffolded yet\"",
+    "build": "echo \"Web not scaffolded yet\"",
+    "lint": "echo \"Web not scaffolded yet\"",
+    "test": "echo \"Web not scaffolded yet\""
+  }
+}
+
