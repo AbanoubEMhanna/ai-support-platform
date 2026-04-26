@@ -26,7 +26,12 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('ai-support-platform API')
+    .setDescription(
+      'Multi-tenant AI support SaaS API with auth, document ingestion, RAG chat, and ticket escalation.',
+    )
     .setVersion('0.0.1')
+    .addCookieAuth('access_token')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);

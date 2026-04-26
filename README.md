@@ -12,7 +12,9 @@ AI customer support SaaS (portfolio project) showcasing:
 
 ```txt
 apps/api       # NestJS API
+apps/worker    # NestJS background worker
 apps/web       # Next.js web app
+packages/db    # Prisma schema/client workspace
 packages/shared
 docs
 docker
@@ -36,6 +38,8 @@ pnpm dev
 
 ## Docs
 
+- `docs/api.md`
 - `docs/local-dev.md`
 - `docs/architecture.md`
 - `docs/rag.md`
+- `docs/features-checklist.md`

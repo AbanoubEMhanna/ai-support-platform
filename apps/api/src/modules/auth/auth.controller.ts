@@ -8,6 +8,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -15,10 +24,17 @@ import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @ApiOperation({
+    summary: 'Register a user and create the first organization',
+  })
+  @ApiCreatedResponse({
+    description: 'Returns the registered user and sets auth cookies.',
+  })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
@@ -29,6 +45,9 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Log in using email and password' })
+  @ApiOkResponse({ description: 'Returns the user and sets auth cookies.' })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -39,7 +58,16 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  @ApiOperation({
+    summary: 'Rotate refresh token from the refresh_token cookie',
+  })
+  @ApiOkResponse({
+    description: 'Returns ok=true and sets a fresh token pair.',
+  })
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const refreshToken = req.cookies?.refresh_token;
     if (!refreshToken) return { ok: false };
 
@@ -50,6 +78,11 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Log out and revoke refresh tokens' })
+  @ApiOkResponse({ description: 'Clears auth cookies and returns ok=true.' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
   async logout(
     @CurrentUser() user: any,
     @Res({ passthrough: true }) res: Response,
@@ -62,6 +95,14 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
+  @ApiCookieAuth('access_token')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get the current authenticated user context' })
+  @ApiOkResponse({
+    description:
+      'Returns JWT user context including active orgId when available.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
   me(@CurrentUser() user: any) {
     return user;
   }

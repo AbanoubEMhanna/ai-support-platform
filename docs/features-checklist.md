@@ -33,7 +33,11 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 ## 2) API (NestJS)
 
 ### Core platform
+
 - [x] Swagger at `/docs`
+- [x] Swagger auth schemes (httpOnly cookie + bearer)
+- [x] Swagger tags, operation summaries, request examples, and multipart upload schema
+- [x] API workflow documentation (`docs/api.md`)
 - [x] ValidationPipe (whitelist + transform)
 - [x] Global exception filter (consistent error envelope)
 - [x] Global response interceptor (success envelope)
@@ -42,6 +46,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [x] Health endpoint `GET /health`
 
 ### Auth (Email/Password + JWT + refresh)
+
 - [x] `POST /auth/register` (argon2 password hashing)
 - [x] `POST /auth/login`
 - [x] `POST /auth/refresh` (refresh via cookie)
@@ -53,6 +58,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [ ] Password policy + rate limiting on auth endpoints
 
 ### Multi-tenancy (Organizations + Membership)
+
 - [x] `POST /organizations` (creates org + owner membership + switches org in token)
 - [x] `GET /organizations` (lists memberships)
 - [x] `POST /organizations/:id/switch` (switch active org by issuing new token pair)
@@ -64,6 +70,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 ## 3) Documents (Upload + Async Processing)
 
 ### API
+
 - [x] `POST /documents/upload` (multer, 10MB limit, TXT/PDF)
 - [x] `GET /documents` (org-scoped list)
 - [x] Local filesystem storage (per org)
@@ -72,10 +79,12 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [ ] Pagination + filtering (status, date range)
 
 ### Queue
+
 - [x] RabbitMQ queue `PROCESS_DOCUMENT` (durable)
 - [ ] DLQ + delayed retries via RabbitMQ plugins (current retry is app-level requeue with delay)
 
 ### Worker
+
 - [x] Consumes `PROCESS_DOCUMENT`
 - [x] Document statuses:
   - [x] `UPLOADED`
@@ -97,6 +106,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 ## 4) Chat (RAG)
 
 ### API
+
 - [x] `POST /chat` (create or continue conversation)
 - [x] `GET /chat/conversations`
 - [x] `GET /chat/conversations/:id/messages`
