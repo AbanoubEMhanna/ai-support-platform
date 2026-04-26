@@ -29,9 +29,8 @@ pnpm -C packages/db prisma:generate
 ## 3) Run apps
 
 ```bash
-pnpm -r dev
+pnpm dev
 ```
 
 - API: `http://localhost:3000` (Swagger: `http://localhost:3000/docs`)
 - Web: `http://localhost:3001`
-

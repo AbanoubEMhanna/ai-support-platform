@@ -25,7 +25,7 @@ cp .env.example .env
 docker compose up -d
 pnpm install
 pnpm -C packages/db prisma:generate
-pnpm -r dev
+pnpm dev
 ```
 
 ## URLs
