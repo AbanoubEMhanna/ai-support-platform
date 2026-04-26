@@ -1,12 +1,26 @@
 {
   "name": "@ai-support-platform/web",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
   "scripts": {
-    "dev": "echo \"Web not scaffolded yet\"",
-    "build": "echo \"Web not scaffolded yet\"",
-    "lint": "echo \"Web not scaffolded yet\"",
-    "test": "echo \"Web not scaffolded yet\""
+    "dev": "next dev --webpack --port 3001",
+    "build": "next build --webpack",
+    "start": "next start -p 3001",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
-

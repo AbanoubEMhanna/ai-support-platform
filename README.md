@@ -21,7 +21,21 @@ docker
 ## Getting started
 
 ```bash
-pnpm -v
+cp .env.example .env
+docker compose up -d
 pnpm install
+pnpm -C packages/db prisma:generate
+pnpm -r dev
 ```
 
+## URLs
+
+- API: `http://localhost:3000` (Swagger: `http://localhost:3000/docs`)
+- Web: `http://localhost:3001`
+- RabbitMQ UI: `http://localhost:15672` (guest/guest)
+
+## Docs
+
+- `docs/local-dev.md`
+- `docs/architecture.md`
+- `docs/rag.md`
