@@ -1,5 +1,10 @@
 export type OrganizationItem = {
-  organization: { id: string; name: string; createdAt: string; updatedAt: string };
+  organization: {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  };
   role: string;
   joinedAt: string;
 };
@@ -33,3 +38,11 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+export type AiProvider = "openai" | "ollama" | "lmstudio";
+
+export type AiModel = {
+  id: string;
+  name: string;
+  provider: AiProvider;
+  details?: string;
+};

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getAiModelSettings } from "../../lib/ai-settings";
 import { apiFetch } from "../../lib/api";
-import type { ChatMessage } from "../../lib/types";
+import type { AiProvider, ChatMessage } from "../../lib/types";
 
 type Conversation = {
   id: string;
@@ -18,6 +19,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [provider, setProvider] = useState<AiProvider>("openai");
+  const [model, setModel] = useState("gpt-4.1-mini");
 
   const active = useMemo(
     () => conversations.find((c) => c.id === activeId) ?? null,
@@ -38,6 +41,14 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
+    function syncModelSettings() {
+      const settings = getAiModelSettings();
+      setProvider(settings.provider);
+      setModel(settings.model);
+    }
+
+    syncModelSettings();
+    window.addEventListener("ai-model-settings-changed", syncModelSettings);
     (async () => {
       try {
         setError(null);
@@ -46,6 +57,11 @@ export default function ChatPage() {
         setError(err?.message ?? "Failed to load chat");
       }
     })();
+    return () =>
+      window.removeEventListener(
+        "ai-model-settings-changed",
+        syncModelSettings,
+      );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -64,7 +80,12 @@ export default function ChatPage() {
         message: ChatMessage;
       }>("/chat", {
         method: "POST",
-        body: { message: input, conversationId: activeId ?? undefined },
+        body: {
+          message: input,
+          conversationId: activeId ?? undefined,
+          provider,
+          model,
+        },
       });
       setInput("");
       setActiveId(res.conversationId);
@@ -124,7 +145,13 @@ export default function ChatPage() {
                   ? `Conversation ${active.id.slice(0, 8)}`
                   : "New conversation"}
               </h2>
+              <div className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-stone-400">
+                Model: {provider} / {model || "not selected"}
+              </div>
             </div>
+            <a className="btn-secondary px-4 py-2" href="/settings">
+              Change model
+            </a>
           </div>
           {error ? <div className="error-box">{error}</div> : null}
           <div className="h-[520px] space-y-4 overflow-auto rounded-[1.5rem] border border-stone-800 bg-stone-900/70 p-4">

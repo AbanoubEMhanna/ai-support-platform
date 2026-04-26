@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class ChatDto {
   @ApiProperty({
@@ -17,4 +17,22 @@ export class ChatDto {
   @IsOptional()
   @IsString()
   conversationId?: string;
+
+  @ApiPropertyOptional({
+    enum: ['openai', 'ollama', 'lmstudio'],
+    example: 'ollama',
+    description: 'Chat completion provider. Defaults to openai.',
+  })
+  @IsOptional()
+  @IsIn(['openai', 'ollama', 'lmstudio'])
+  provider?: 'openai' | 'ollama' | 'lmstudio';
+
+  @ApiPropertyOptional({
+    example: 'llama3.2:latest',
+    description:
+      'Provider-specific model id selected from GET /ai/models. Required for Ollama/LM Studio.',
+  })
+  @IsOptional()
+  @IsString()
+  model?: string;
 }

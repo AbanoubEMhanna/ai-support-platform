@@ -38,6 +38,8 @@ export class ChatController {
       userId: user.sub,
       message: dto.message,
       conversationId: dto.conversationId,
+      provider: dto.provider,
+      model: dto.model,
     });
   }
 

@@ -3,6 +3,7 @@ import { MessageRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmbeddingService } from '../ai/embedding.service';
 import { LlmService } from '../ai/llm.service';
+import type { AiProvider } from '../ai/ai.types';
 
 type Source = {
   chunkId: string;
@@ -45,7 +46,13 @@ export class ChatService {
     return this.prisma.message.findMany({
       where: { conversationId: convo.id },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, role: true, content: true, sources: true, createdAt: true },
+      select: {
+        id: true,
+        role: true,
+        content: true,
+        sources: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -54,6 +61,8 @@ export class ChatService {
     userId: string;
     message: string;
     conversationId?: string;
+    provider?: AiProvider;
+    model?: string;
   }) {
     const conversation = params.conversationId
       ? await this.prisma.conversation.findFirst({
@@ -87,7 +96,12 @@ export class ChatService {
     const queryVector = toVectorString(queryEmbedding);
 
     const rows = await this.prisma.$queryRaw<
-      Array<{ chunkId: string; content: string; documentId: string; originalName: string }>
+      Array<{
+        chunkId: string;
+        content: string;
+        documentId: string;
+        originalName: string;
+      }>
     >`
       SELECT
         dc."id"::text as "chunkId",
@@ -127,7 +141,12 @@ export class ChatService {
       ),
     ].join('\n');
 
-    const llmRes = await this.llm.chat({ system, user: userPrompt });
+    const llmRes = await this.llm.chat({
+      system,
+      user: userPrompt,
+      provider: params.provider,
+      model: params.model,
+    });
 
     const assistantMessage = await this.prisma.message.create({
       data: {

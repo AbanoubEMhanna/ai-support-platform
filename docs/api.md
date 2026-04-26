@@ -65,6 +65,7 @@ For Swagger/manual testing, use either:
 | Area          | Method  | Path                               | Notes                                     |
 | ------------- | ------- | ---------------------------------- | ----------------------------------------- |
 | Health        | `GET`   | `/health`                          | Public runtime check                      |
+| AI            | `GET`   | `/ai/models?provider=ollama`       | Lists OpenAI/Ollama/LM Studio models      |
 | Auth          | `POST`  | `/auth/register`                   | Creates user + first org and sets cookies |
 | Auth          | `POST`  | `/auth/login`                      | Sets cookies                              |
 | Auth          | `POST`  | `/auth/refresh`                    | Rotates tokens from refresh cookie        |
@@ -105,6 +106,10 @@ curl -i \
 
 - Embedding model: OpenAI `text-embedding-3-small` when `OPENAI_API_KEY` is present.
 - Fallback mode: deterministic local embeddings when no API key is configured, so local demo still works.
+- Chat providers:
+  - `openai`: uses `OPENAI_API_KEY` and defaults to `gpt-4.1-mini`.
+  - `ollama`: lists models from `OLLAMA_BASE_URL/api/tags` and chats via `OLLAMA_BASE_URL/api/chat`.
+  - `lmstudio`: lists models from `LM_STUDIO_BASE_URL/v1/models` and chats via `LM_STUDIO_BASE_URL/v1/chat/completions`.
 - Vector dimension: `1536`.
 - Retrieval: top 5 chunks using pgvector distance.
 - Assistant messages store citations in `sources`.
@@ -115,3 +120,4 @@ curl -i \
 - If uploads stay `UPLOADED`, confirm RabbitMQ is running and the worker log says it is consuming `PROCESS_DOCUMENT`.
 - If Postgres connection fails, confirm Docker is running and `DATABASE_URL` targets port `5433`.
 - If chat returns fallback answers, set `OPENAI_API_KEY` in `.env` and restart API + Worker.
+- If Ollama or LM Studio models do not list, confirm the local server is running and the API can reach `OLLAMA_BASE_URL` or `LM_STUDIO_BASE_URL`.

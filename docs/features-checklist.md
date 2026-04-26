@@ -110,6 +110,8 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [x] `POST /chat` (create or continue conversation)
 - [x] `GET /chat/conversations`
 - [x] `GET /chat/conversations/:id/messages`
+- [x] `GET /ai/models` (OpenAI/Ollama/LM Studio model listing)
+- [x] UI model selector (provider + model saved locally)
 - [x] Retrieval:
   - [x] query embedding
   - [x] TopK=5 similarity search using `embedding_vector <=> queryVector`
