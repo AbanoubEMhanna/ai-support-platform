@@ -13,6 +13,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
+The API and Worker are configured to read `.env` from the repository root when they run from their workspace directories.
+
 Services:
 
 - Postgres (pgvector) on `localhost:5433`

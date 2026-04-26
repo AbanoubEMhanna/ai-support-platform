@@ -10,6 +10,7 @@ import { QueueConsumerService } from './queue/queue-consumer.service';
     ConfigModule.forRoot({
       isGlobal: true,
       expandVariables: true,
+      envFilePath: ['.env', '../../.env'],
     }),
   ],
   controllers: [],
