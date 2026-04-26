@@ -49,7 +49,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [x] `GET /auth/me`
 - [x] `GET /me`
 - [x] httpOnly cookies: `access_token`, `refresh_token`
-- [ ] Better refresh UX (web-triggered refresh flow on 401)
+- [x] Better refresh UX (web-triggered refresh flow on 401)
 - [ ] Password policy + rate limiting on auth endpoints
 
 ### Multi-tenancy (Organizations + Membership)
@@ -120,7 +120,7 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [x] `PATCH /tickets/:id/status`
 - [x] Status enum: `OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`
 - [x] Priority enum: `LOW`, `MEDIUM`, `HIGH`, `URGENT`
-- [ ] Ticket create UI in Web (currently tickets page is list + status update)
+- [x] Ticket create UI in Web
 - [ ] AI-suggested escalation (flag + endpoint / rule)
 
 ---
@@ -141,8 +141,8 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [ ] Better UX:
   - [ ] Loading states per section
   - [ ] Better chat UI (message bubbles + source rendering)
-  - [ ] Ticket create UI
-  - [ ] Logout button
+  - [x] Ticket create UI
+  - [x] Logout button
 
 ---
 
@@ -166,4 +166,3 @@ Use this file as an iteration tracker (checklist). Items marked **[x]** are impl
 - [ ] Redis usage (caching / rate limit / job dedupe)
 - [ ] Structured logging (pino) + request id propagation to worker jobs
 - [ ] Deployment (optional later): Vercel + Railway/Fly.io
-
