@@ -21,7 +21,11 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { IsString, MinLength } from 'class-validator';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
+import { setAuthCookies } from '../../common/http/cookies';
 import { AuthService } from '../auth/auth.service';
 import { OrganizationsService } from './organizations.service';
 
@@ -49,7 +53,7 @@ export class OrganizationsController {
     description: 'Returns memberships and organizations available to the user.',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
-  list(@CurrentUser() user: any) {
+  list(@CurrentUser() user: AuthUser) {
     return this.orgs.listForUser(user.sub);
   }
 
@@ -60,13 +64,13 @@ export class OrganizationsController {
       'Creates an organization, owner membership, and sets new auth cookies.',
   })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() dto: CreateOrganizationDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const org = await this.orgs.createForUser(user.sub, dto.name);
     const tokens = await this.auth.issueTokensForOrg(user.sub, org.id);
-    this.setAuthCookies(res, tokens);
+    setAuthCookies(res, tokens);
     return org;
   }
 
@@ -80,27 +84,12 @@ export class OrganizationsController {
     description: 'Sets a new token pair scoped to the selected organization.',
   })
   async switchOrg(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Param('id') organizationId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.auth.issueTokensForOrg(user.sub, organizationId);
-    this.setAuthCookies(res, tokens);
+    setAuthCookies(res, tokens);
     return { ok: true };
-  }
-
-  private setAuthCookies(res: Response, tokens: any) {
-    res.cookie('access_token', tokens.accessToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      path: '/',
-    });
-    res.cookie('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      path: '/',
-    });
   }
 }

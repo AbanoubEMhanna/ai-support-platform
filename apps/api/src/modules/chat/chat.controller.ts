@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiCookieAuth,
@@ -10,7 +11,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
 import { OrgGuard } from '../../common/guards/org.guard';
 import { ChatDto } from './dto/chat.dto';
 import { ChatService } from './chat.service';
@@ -24,6 +28,7 @@ export class ChatController {
   constructor(private readonly chat: ChatService) {}
 
   @Post()
+  @Throttle({ chat: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Send a RAG chat message' })
   @ApiCreatedResponse({
     description:
@@ -32,9 +37,9 @@ export class ChatController {
   @ApiUnauthorizedResponse({
     description: 'Missing token or active org context.',
   })
-  chatMessage(@CurrentUser() user: any, @Body() dto: ChatDto) {
+  chatMessage(@CurrentUser() user: AuthUser, @Body() dto: ChatDto) {
     return this.chat.chat({
-      organizationId: user.orgId,
+      organizationId: user.orgId!,
       userId: user.sub,
       message: dto.message,
       conversationId: dto.conversationId,
@@ -48,17 +53,20 @@ export class ChatController {
   @ApiOkResponse({
     description: 'Returns conversations visible to the current user.',
   })
-  list(@CurrentUser() user: any) {
-    return this.chat.listConversations(user.orgId, user.sub);
+  list(@CurrentUser() user: AuthUser) {
+    return this.chat.listConversations(user.orgId!, user.sub);
   }
 
   @Get('conversations/:id/messages')
   @ApiOperation({ summary: 'List messages for a conversation' })
   @ApiParam({ name: 'id', description: 'Conversation id.' })
   @ApiOkResponse({ description: 'Returns org-scoped conversation messages.' })
-  messages(@CurrentUser() user: any, @Param('id') conversationId: string) {
+  messages(
+    @CurrentUser() user: AuthUser,
+    @Param('id') conversationId: string,
+  ) {
     return this.chat.listMessages({
-      organizationId: user.orgId,
+      organizationId: user.orgId!,
       userId: user.sub,
       conversationId,
     });

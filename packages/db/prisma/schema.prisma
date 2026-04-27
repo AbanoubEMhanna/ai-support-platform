@@ -96,15 +96,16 @@ model Membership {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
-  userId    String
-  tokenHash String
-  expiresAt DateTime
-  revokedAt DateTime?
+  id               String    @id @default(uuid())
+  userId           String
+  tokenHash        String
+  tokenHashSha256  String    @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt        DateTime  @default(now())
 
   @@index([userId])
 }

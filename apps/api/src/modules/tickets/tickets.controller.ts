@@ -18,14 +18,19 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { OrgGuard } from '../../common/guards/org.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { TicketsService } from './tickets.service';
 
 @Controller('tickets')
-@UseGuards(AuthGuard('jwt'), OrgGuard)
+@UseGuards(AuthGuard('jwt'), OrgGuard, RolesGuard)
 @ApiTags('Tickets')
 @ApiCookieAuth('access_token')
 @ApiBearerAuth()
@@ -38,8 +43,8 @@ export class TicketsController {
   @ApiUnauthorizedResponse({
     description: 'Missing token or active org context.',
   })
-  list(@CurrentUser() user: any) {
-    return this.tickets.list(user.orgId);
+  list(@CurrentUser() user: AuthUser) {
+    return this.tickets.list(user.orgId!);
   }
 
   @Post()
@@ -49,9 +54,9 @@ export class TicketsController {
   @ApiCreatedResponse({
     description: 'Creates a ticket scoped to the active organization.',
   })
-  create(@CurrentUser() user: any, @Body() dto: CreateTicketDto) {
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreateTicketDto) {
     return this.tickets.create({
-      organizationId: user.orgId,
+      organizationId: user.orgId!,
       createdByUserId: user.sub,
       conversationId: dto.conversationId,
       priority: dto.priority,
@@ -60,16 +65,17 @@ export class TicketsController {
   }
 
   @Patch(':id/status')
-  @ApiOperation({ summary: 'Update ticket status' })
+  @Roles('OWNER', 'ADMIN')
+  @ApiOperation({ summary: 'Update ticket status (OWNER or ADMIN only)' })
   @ApiParam({ name: 'id', description: 'Ticket id.' })
   @ApiOkResponse({ description: 'Updates and returns the ticket.' })
   updateStatus(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Param('id') ticketId: string,
     @Body() dto: UpdateTicketStatusDto,
   ) {
     return this.tickets.updateStatus({
-      organizationId: user.orgId,
+      organizationId: user.orgId!,
       ticketId,
       status: dto.status,
     });

@@ -1,0 +1,6 @@
+apps/api/src/app.module.ts
+apps/api/src/prisma/prisma.module.ts
+apps/api/src/modules/organizations/organizations.module.ts
+apps/api/src/modules/auth/auth.module.ts
+apps/api/src/modules/ai/ai.module.ts
+apps/api/src/modules/tickets/tickets.module.ts

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -19,7 +20,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
 import { OrgGuard } from '../../common/guards/org.guard';
 import { DocumentsService } from './documents.service';
 
@@ -40,12 +44,13 @@ export class DocumentsController {
   @ApiUnauthorizedResponse({
     description: 'Missing token or active org context.',
   })
-  list(@CurrentUser() user: any) {
-    return this.documents.list(user.orgId);
+  list(@CurrentUser() user: AuthUser) {
+    return this.documents.list(user.orgId!);
   }
 
   @Post('upload')
   @UseGuards(OrgGuard)
+  @Throttle({ upload: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Upload a TXT or PDF document for async processing',
   })
@@ -72,9 +77,12 @@ export class DocumentsController {
       limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
-  upload(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File) {
+  upload(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     return this.documents.upload({
-      organizationId: user.orgId,
+      organizationId: user.orgId!,
       userId: user.sub,
       file,
     });

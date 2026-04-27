@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiCookieAuth,
@@ -18,7 +19,14 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
+import {
+  clearAuthCookies,
+  setAuthCookies,
+} from '../../common/http/cookies';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
@@ -29,6 +37,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ auth: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Register a user and create the first organization',
   })
@@ -40,11 +49,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, tokens } = await this.auth.register(dto);
-    this.setAuthCookies(res, tokens);
+    setAuthCookies(res, tokens);
     return user;
   }
 
   @Post('login')
+  @Throttle({ auth: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: 'Log in using email and password' })
   @ApiOkResponse({ description: 'Returns the user and sets auth cookies.' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
@@ -53,11 +63,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, tokens } = await this.auth.login(dto);
-    this.setAuthCookies(res, tokens);
+    setAuthCookies(res, tokens);
     return user;
   }
 
   @Post('refresh')
+  @Throttle({ auth: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Rotate refresh token from the refresh_token cookie',
   })
@@ -72,7 +83,7 @@ export class AuthController {
     if (!refreshToken) return { ok: false };
 
     const tokens = await this.auth.refreshFromJwt(refreshToken);
-    this.setAuthCookies(res, tokens);
+    setAuthCookies(res, tokens);
     return { ok: true };
   }
 
@@ -84,12 +95,11 @@ export class AuthController {
   @ApiOkResponse({ description: 'Clears auth cookies and returns ok=true.' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
   async logout(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.auth.logout(user.sub);
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    clearAuthCookies(res);
     return { ok: true };
   }
 
@@ -103,22 +113,12 @@ export class AuthController {
       'Returns JWT user context including active orgId when available.',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
-  me(@CurrentUser() user: any) {
-    return user;
-  }
-
-  private setAuthCookies(res: Response, tokens: any) {
-    res.cookie('access_token', tokens.accessToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      path: '/',
-    });
-    res.cookie('refresh_token', tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      path: '/',
-    });
+  me(@CurrentUser() user: AuthUser) {
+    return {
+      sub: user.sub,
+      email: user.email,
+      orgId: user.orgId ?? null,
+      role: user.role ?? null,
+    };
   }
 }

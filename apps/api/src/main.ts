@@ -1,19 +1,33 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { validateApiEnv } from '@ai-support-platform/shared';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/http/http-exception.filter';
 import { ResponseInterceptor } from './common/http/response.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const env = validateApiEnv(process.env);
 
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', 1);
+
+  app.use(helmet());
+  app.use(compression());
   app.use(cookieParser());
+
+  app.useBodyParser('json', { limit: '1mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '1mb' });
+
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001',
+    origin: env.WEB_ORIGIN,
     credentials: true,
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,6 +37,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
+  app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
     .setTitle('ai-support-platform API')
@@ -36,7 +51,17 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const port = Number(process.env.API_PORT ?? process.env.PORT ?? 3000);
-  await app.listen(port);
+  await app.listen(env.API_PORT);
+  Logger.log(
+    `API listening on http://localhost:${env.API_PORT} (env=${env.NODE_ENV})`,
+    'Bootstrap',
+  );
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  Logger.error(
+    err instanceof Error ? err.stack ?? err.message : String(err),
+    'Bootstrap',
+  );
+  process.exit(1);
+});

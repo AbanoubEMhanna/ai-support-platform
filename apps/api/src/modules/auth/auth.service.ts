@@ -2,9 +2,12 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { createHash } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 type Tokens = { accessToken: string; refreshToken: string };
+
+const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,10 @@ export class AuthService {
 
   private refreshSecret() {
     return this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
+  }
+
+  private sha256(value: string) {
+    return createHash('sha256').update(value).digest('hex');
   }
 
   private async signTokens(payload: {
@@ -72,7 +79,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       orgId: membership?.organizationId,
-      role: membership?.role as any,
+      role: membership?.role as 'OWNER' | 'ADMIN' | 'MEMBER' | undefined,
     });
 
     await this.persistRefreshToken(user.id, tokens.refreshToken);
@@ -84,17 +91,25 @@ export class AuthService {
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const active = await this.prisma.refreshToken.findFirst({
-      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!active) throw new ForbiddenException('Invalid refresh token');
+    const tokenHashSha256 = this.sha256(refreshToken);
 
-    const ok = await argon2.verify(active.tokenHash, refreshToken);
-    if (!ok) throw new ForbiddenException('Invalid refresh token');
+    const stored = await this.prisma.refreshToken.findUnique({
+      where: { tokenHashSha256 },
+    });
+    if (!stored || stored.userId !== userId) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+    if (stored.revokedAt || stored.expiresAt.getTime() <= Date.now()) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+
+    const ok = await argon2.verify(stored.tokenHash, refreshToken);
+    if (!ok) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
 
     await this.prisma.refreshToken.update({
-      where: { id: active.id },
+      where: { id: stored.id },
       data: { revokedAt: new Date() },
     });
 
@@ -113,7 +128,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       orgId: membership?.organizationId,
-      role: membership?.role as any,
+      role: membership?.role as 'OWNER' | 'ADMIN' | 'MEMBER' | undefined,
     });
     await this.persistRefreshToken(user.id, tokens.refreshToken);
 
@@ -121,7 +136,7 @@ export class AuthService {
   }
 
   async refreshFromJwt(refreshToken: string) {
-    const payload = await this.jwt.verifyAsync<any>(refreshToken, {
+    const payload = await this.jwt.verifyAsync<{ sub: string }>(refreshToken, {
       secret: this.refreshSecret(),
     });
     return this.refresh(payload.sub, refreshToken);
@@ -151,7 +166,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       orgId: membership.organizationId,
-      role: membership.role as any,
+      role: membership.role as 'OWNER' | 'ADMIN' | 'MEMBER',
     });
     await this.persistRefreshToken(user.id, tokens.refreshToken);
     return tokens;
@@ -159,10 +174,11 @@ export class AuthService {
 
   private async persistRefreshToken(userId: string, refreshToken: string) {
     const tokenHash = await argon2.hash(refreshToken);
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const tokenHashSha256 = this.sha256(refreshToken);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
     await this.prisma.refreshToken.create({
-      data: { userId, tokenHash, expiresAt },
+      data: { userId, tokenHash, tokenHashSha256, expiresAt },
     });
   }
 }

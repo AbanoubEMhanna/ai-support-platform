@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "RefreshToken" (
   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "userId" UUID NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
   "tokenHash" TEXT NOT NULL,
+  "tokenHashSha256" TEXT NOT NULL UNIQUE,
   "expiresAt" TIMESTAMPTZ NOT NULL,
   "revokedAt" TIMESTAMPTZ,
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()

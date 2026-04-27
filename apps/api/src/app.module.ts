@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { AiModule } from './modules/ai/ai.module';
@@ -19,6 +21,12 @@ import { PrismaModule } from './prisma/prisma.module';
       expandVariables: true,
       envFilePath: ['.env', '../../.env'],
     }),
+    ThrottlerModule.forRoot([
+      { name: 'default', ttl: 60_000, limit: 120 },
+      { name: 'auth', ttl: 60_000, limit: 10 },
+      { name: 'upload', ttl: 60_000, limit: 30 },
+      { name: 'chat', ttl: 60_000, limit: 30 },
+    ]),
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -31,6 +39,11 @@ import { PrismaModule } from './prisma/prisma.module';
     TicketsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
